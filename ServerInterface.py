@@ -9,13 +9,14 @@ WIN_SCALE: tuple = (150, 100)
 sg.theme('DarkBlack')
 
 _ = ''
+server_status = 'Inactive'
 
 # 150 - 100
 main = [
     [sg.Text('Server', justification='center', font=('Hartwell Bold', 35), expand_x=True)],
     [sg.Text('Bind to start connection', justification='center', font=('Hartwell Light', 16), expand_x=True)],
     [sg.Text()],
-    [sg.Text('Server status: ', justification='center', font=('Hartwell Light', 14)), sg.Text('Inactive', justification='center', font=('Hartwell Medium', 14), key='-SERVER_STATUS-')],
+    [sg.Text('Server status: ', justification='center', font=('Hartwell Light', 14)), sg.Text(server_status, justification='center', font=('Hartwell Medium', 14), key='-SERVER_STATUS-')],
     [sg.Column([
         [sg.Button('Bind', size=(15, 1))],
         [sg.Button('History', size=(15, 1))],
@@ -42,6 +43,9 @@ def errorWindow():
 main_window = sg.Window('Server', main, margins=WIN_SCALE)
 
 def showBindWindow() -> bool:
+
+    global _
+
     # 20 - 10
     bind = [
         [sg.Text('HOST: ', justification='left', font=('Hartwell Light', 10)), sg.InputText('', key='-HOST-'), sg.Button('GET', size=(4, 1))],
@@ -57,7 +61,7 @@ def showBindWindow() -> bool:
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
 
-        if event == '-CONFIRM_BIND-':
+        if event == '-CONFIRM_BIND-' and len(values['-PORT-']) and len(values['-HOST-']):
             try:
                 int(values['-PORT-'])
             except:
@@ -76,6 +80,9 @@ def showBindWindow() -> bool:
         elif event == 'GET':
             bind_window['-HOST-'].update(socket.gethostbyname(socket.gethostname()))
 
+        else:
+            errorWindow()
+
     bind_window.close()
 
     if verify:
@@ -86,14 +93,16 @@ def showBindWindow() -> bool:
 
 while True:
     event, values = main_window.read()
-    print(values['-SERVER_STATUS-'])
     if event == sg.WIN_CLOSED or event == 'Exit':
-        if values['-SERVER_STATUS-'] == 'Active':
+        print(server_status)
+        if server_status == 'Active':
+            print(_)
             _.closeServer()
         break
     if event == 'Bind':
         response = showBindWindow()
         if response:
-            main_window['-SERVER_STATUS-'].update('Active')
+            server_status = 'Active'
+            main_window['-SERVER_STATUS-'].update(server_status)
 
 main_window.close()
