@@ -17,10 +17,12 @@ class Server:
         self.server.bind(self.ADDR)
         self.server.listen()
         while self.server_open:
+            print(self.server_open)
             connection, address = self.server.accept()
             Thread = threading.Thread(target=self.handleClient, args=(connection, address))
             Thread.start()
             print(f"[SERVER] {threading.activeCount() - 1} clients connected.")
+        print("Server closed")
 
     def closeServer(self):
         self.server.close()
@@ -65,5 +67,15 @@ class Server:
         connection.close()
 
 if __name__ == "__main__":
-    server = Server()
+
+    HOST: str = '10.20.30.47'
+    PORT: int = 8080
+
+    #so = socket.socket()
+    #so.bind(('127.0.1.1', 0))
+    #print(so.getsockname()[1])
+
+    #PORT = so.getsockname()[1] + 1
+
+    server = Server(HOST, PORT)
     server.startServer()
