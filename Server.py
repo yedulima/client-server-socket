@@ -1,29 +1,30 @@
 import socket
 import threading
 from time import sleep
-import os
 
 class Server:
-    HOST: str = socket.gethostbyname(socket.gethostname())
-    PORT: int = 1024
-    ADDR: tuple = (HOST, PORT)
-
     clients = []
     messages = []
-
-    def __init__(self):
+    def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_open = True
+        self.HOST: str = host
+        self.PORT: int = port
+        self.ADDR: tuple = (self.HOST, self.PORT)
 
     def startServer(self):
-        clean_terminal()
         print("[SERVER] Connected waiting for clients...")
         self.server.bind(self.ADDR)
         self.server.listen()
-        while True:
+        while self.server_open:
             connection, address = self.server.accept()
             Thread = threading.Thread(target=self.handleClient, args=(connection, address))
             Thread.start()
             print(f"[SERVER] {threading.activeCount() - 1} clients connected.")
+
+    def closeServer(self):
+        self.server.close()
+        self.server_open = False
 
     @classmethod
     def addNewClient(cls, port: int, name: str):
@@ -64,8 +65,5 @@ class Server:
         connection.close()
 
 if __name__ == "__main__":
-
-    clean_terminal = lambda: os.system("cls") if os.name == 'nt' else os.system("clear")
-
     server = Server()
     server.startServer()
