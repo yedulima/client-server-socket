@@ -3,12 +3,14 @@ from Server import Server
 import socket
 import PySimpleGUI as sg
 import threading
+import multiprocessing
+import os
 
 WIN_SCALE: tuple = (150, 100)
+process_pid: int = 0
 
 sg.theme('DarkBlack')
 
-_ = ''
 server_status = 'Inactive'
 
 # 150 - 100
@@ -44,7 +46,7 @@ main_window = sg.Window('Server', main, margins=WIN_SCALE)
 
 def showBindWindow() -> bool:
 
-    global _
+    global process_pid
 
     # 20 - 10
     bind = [
@@ -72,6 +74,7 @@ def showBindWindow() -> bool:
                     bind_window['-PORT-'].update('')
                     errorWindow()
                     continue
+                
                 # Bind connect here
                 _ = Server(values['-HOST-'], int(values['-PORT-']))
                 verify = True
@@ -86,18 +89,18 @@ def showBindWindow() -> bool:
     bind_window.close()
 
     if verify:
-        server = threading.Thread(target=_.startServer)
+        server = multiprocessing.Process(target=_.startServer)
         server.start()
+        process_pid = server.pid
         return True
     return False
 
 while True:
     event, values = main_window.read()
     if event == sg.WIN_CLOSED or event == 'Exit':
-        print(server_status)
         if server_status == 'Active':
-            print(_)
-            _.closeServer()
+            os.kill(process_pid, 1)
+            print("[SERVER] Server closed automatically.")
         break
     if event == 'Bind':
         response = showBindWindow()
