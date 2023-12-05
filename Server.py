@@ -17,12 +17,10 @@ class Server:
         self.server.bind(self.ADDR)
         self.server.listen()
         while self.server_open:
-            print(self.server_open)
             connection, address = self.server.accept()
             Thread = threading.Thread(target=self.handleClient, args=(connection, address))
             Thread.start()
             print(f"[SERVER] {threading.activeCount() - 1} clients connected.")
-        print("Server closed")
 
     def closeServer(self):
         self.server.close()
