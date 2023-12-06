@@ -2,7 +2,6 @@ from Server import Server
 
 import socket
 import PySimpleGUI as sg
-import threading
 import multiprocessing
 import os
 
@@ -11,16 +10,18 @@ process_pid: int = 0
 
 sg.theme('DarkBlack')
 
-server_status = 'Inactive'
+server_status: str = 'Inactive'
+bind_button: str = 'Bind'
+addr: tuple = ()
 
 # 150 - 100
 main = [
     [sg.Text('Server', justification='center', font=('Hartwell Bold', 35), expand_x=True)],
     [sg.Text('Bind to start connection', justification='center', font=('Hartwell Light', 16), expand_x=True)],
-    [sg.Text()],
+    [sg.Text('Start the server', justification='center', font=('Hartwell Light', 10), expand_x=True, key='server_host')],
     [sg.Text('Server status: ', justification='center', font=('Hartwell Light', 14)), sg.Text(server_status, justification='center', font=('Hartwell Medium', 14), key='-SERVER_STATUS-')],
     [sg.Column([
-        [sg.Button('Bind', size=(15, 1))],
+        [sg.Button(bind_button, size=(15, 1))],
         [sg.Button('History', size=(15, 1))],
         [sg.Button('Monitoring', size=(15, 1))]
     ], element_justification='c', expand_x=True)]
@@ -47,6 +48,7 @@ main_window = sg.Window('Server', main, margins=WIN_SCALE)
 def showBindWindow() -> bool:
 
     global process_pid
+    global addr
 
     # 20 - 10
     bind = [
@@ -77,6 +79,7 @@ def showBindWindow() -> bool:
                 
                 # Bind connect here
                 _ = Server(values['-HOST-'], int(values['-PORT-']))
+                addr = (values['-HOST-'], int(values['-PORT-']))
                 verify = True
                 break
 
@@ -102,10 +105,25 @@ while True:
             os.kill(process_pid, 1)
             print("[SERVER] Server closed automatically.")
         break
+
     if event == 'Bind':
+        if server_status == 'Active':
+            os.kill(process_pid, 1)
+            print("[SERVER] Server closed.")
+            server_status = 'Inactive'
+            bind_button = 'Bind'
+
+            main_window['-SERVER_STATUS-'].update(server_status)
+            main_window['Bind'].update(bind_button)
+            main_window['server_host'].update("Start the server")
+            continue
         response = showBindWindow()
         if response:
             server_status = 'Active'
+            bind_button = 'Desbind'
+
             main_window['-SERVER_STATUS-'].update(server_status)
+            main_window['Bind'].update(bind_button)
+            main_window['server_host'].update(f"HOST: {addr[0]} | PORT: {addr[1]}")
 
 main_window.close()
